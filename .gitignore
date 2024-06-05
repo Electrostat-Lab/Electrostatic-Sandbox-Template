@@ -4,8 +4,8 @@
 .gradle
 
 # Ignore Gradle/CMake build output directory
-#build
-#cmake-build
+build
+cmake-build
 .so
 .cache
 .idea
