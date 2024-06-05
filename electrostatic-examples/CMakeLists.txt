@@ -1,0 +1,60 @@
+cmake_minimum_required(VERSION 3.18.1)
+
+# define a project with a version
+project(electrostatic-examples VERSION 1.0)
+
+# display external options
+message(STATUS "Project: electrostatic-examples")
+message(STATUS "GCC: ${GCC_BIN}")
+message(STATUS "GPP: ${GPP_BIN}")
+message(STATUS "Compiler Options: ${INPUT_COMPILER_OPTIONS}")
+message(STATUS "Target architecture: ${TARGET}")
+message(STATUS "Toolchain Includes: ${TOOLCHAIN_INCLUDES}")
+message(STATUS "Included-library: ${ELECTROSTATIC_CORE}")
+message(STATUS "Runnable-example: ${EXAMPLE}")
+
+# assign the target architecture arguments from the pre-determined directory
+if("${TARGET}" STREQUAL "x86")
+    set(ARCH_OPTIONS "-m32")
+    message(STATUS "Compiling for 32-bit Intel Chipset")
+elseif("${TARGET}" STREQUAL "x86-64")
+    set(ARCH_OPTIONS "-m64")
+    message(STATUS "Compiling for 64-bit Intel Chipset")
+# elseif(${TARGET} STREQUAL "android-x86")
+else()
+    set(${TARGET} "x86-64")
+    set(ARCH_OPTIONS "-m64")
+endif()
+
+# Cmake variables
+set(executable_a "${EXAMPLE}-a.elf") # target for archive-linked binary
+set(executable_so "${EXAMPLE}.elf") # target for shared-linked binary
+
+set(CMAKE_C_COMPILER "${GCC_BIN}")
+set(CMAKE_CXX_COMPILER "${GPP_BIN}")
+set(COMPILER_OPTIONS "${ARCH_OPTIONS} ${INPUT_COMPILER_OPTIONS}")
+
+set(lib_headers "${ELECTROSTATIC_CORE}/src/include")
+set(headers "${TOOLCHAIN_INCLUDES}")
+
+# C sources
+set(sources "${CMAKE_CURRENT_SOURCE_DIR}/src/${EXAMPLE}")
+
+# add a library target
+add_executable(${executable_a}) # executable based on the static archive
+add_executable(${executable_so}) # executable based on the dynamic library
+
+# set both COMPILE_FLAGS and LINK_FLAGS to the specified binary architecture
+set_target_properties(${executable_a} PROPERTIES COMPILE_FLAGS "${COMPILER_OPTIONS}" LINK_FLAGS "${COMPILER_OPTIONS}")
+set_target_properties(${executable_so} PROPERTIES COMPILE_FLAGS "${COMPILER_OPTIONS}" LINK_FLAGS "${COMPILER_OPTIONS}")
+
+# include headers for the target
+target_include_directories(${executable_a} PUBLIC ${lib_headers} ${headers})
+target_include_directories(${executable_so} PUBLIC ${lib_headers} ${headers})
+
+target_link_libraries(${executable_a} "${ELECTROSTATIC_CORE}/build/${TARGET}/libelectrostatic-a.a")
+target_link_libraries(${executable_so} "${ELECTROSTATIC_CORE}/build/${TARGET}/libelectrostatic.so")
+
+# Start building the target
+target_sources(${executable_a} PUBLIC ${sources})
+target_sources(${executable_so} PUBLIC ${sources})
